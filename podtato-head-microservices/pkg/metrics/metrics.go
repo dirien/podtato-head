@@ -3,6 +3,7 @@ package metrics
 import (
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -12,6 +13,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	LatencyInjectionEnvVar = "PODTATO_LATENCY_MS"
+)
+
+var artificialLatencyMs int
+
 func init() {
 	err := prometheus.Register(CallCounter)
 	if err != nil {
@@ -20,6 +27,15 @@ func init() {
 	err = prometheus.Register(LatencyHistogram)
 	if err != nil {
 		log.Fatal(err, "couldn't register LatencyHistogram")
+	}
+
+	// Read artificial latency configuration for demo purposes
+	latencyStr := os.Getenv(LatencyInjectionEnvVar)
+	if len(latencyStr) > 0 {
+		if latency, err := strconv.Atoi(latencyStr); err == nil && latency > 0 {
+			artificialLatencyMs = latency
+			log.Printf("Artificial latency enabled: %dms per request (for demo purposes)", artificialLatencyMs)
+		}
 	}
 }
 
@@ -44,6 +60,11 @@ func MetricsHandler(next http.Handler) http.Handler {
 		start := time.Now()
 		rw := util.StatusRecordingResponseWriter{ResponseWriter: w, Status: 200}
 		next.ServeHTTP(&rw, r)
+
+		// Inject artificial latency for demo purposes if configured
+		if artificialLatencyMs > 0 {
+			time.Sleep(time.Duration(artificialLatencyMs) * time.Millisecond)
+		}
 
 		// record latency and status
 		duration := time.Since(start)

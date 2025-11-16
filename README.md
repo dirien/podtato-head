@@ -68,6 +68,49 @@ HTTP handlers and other shared functionality is defined in `podtato-head-microse
 
 To run local tests on the Go code, run `make podtato-head-verify`.
 
+### Latency Injection for Demos
+
+Both the microservices architecture (`podtato-head-microservices`) and the monolithic server (`podtato-head-server`) support artificial latency injection for demonstration purposes. This feature allows you to simulate slower services to demonstrate monitoring, observability, and performance testing scenarios.
+
+#### Usage
+
+Set the `PODTATO_LATENCY_MS` environment variable to inject a delay (in milliseconds) into each HTTP request:
+
+```bash
+# Example: Add 500ms latency to the hat service
+kubectl set env deployment/podtato-head-hat PODTATO_LATENCY_MS=500
+```
+
+When using Helm, you can configure this via the `env` parameter for each service:
+
+```bash
+helm upgrade podtato-head ./delivery/chart \
+  --set hat.env[0].name=PODTATO_LATENCY_MS \
+  --set hat.env[0].value=500
+```
+
+Or in your `values.yaml`:
+
+```yaml
+hat:
+  env:
+    - name: PODTATO_LATENCY_MS
+      value: "500"
+```
+
+#### How It Works
+
+The latency is injected after the request is processed but before metrics are recorded, ensuring that:
+- Prometheus metrics (e.g., `http_server_request_duration_seconds`) accurately reflect the injected latency
+- You can observe the performance impact in your monitoring dashboards
+- The delay applies to all HTTP endpoints consistently
+
+This is particularly useful for:
+- Demonstrating observability tools and dashboards
+- Testing alerting thresholds
+- Showing the impact of slow dependencies in distributed systems
+- Training on performance troubleshooting
+
 ### Build
 
 Build an image for each part - entry, hat, each arm and each leg - with `make

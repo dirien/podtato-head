@@ -23,9 +23,11 @@ const (
 	StaticAssetsPathEnvVar    = "STATIC_ASSETS_PATH"
 	StaticAssetsPathDefault   = "./static"
 	StaticAssetsURLPathPrefix = "/static"
+	LatencyInjectionEnvVar    = "PODTATO_LATENCY_MS"
 )
 
 var staticAssetsPath string
+var artificialLatencyMs int
 
 var podtatoConfiguration *pkg.PodtatoConfig
 
@@ -105,6 +107,11 @@ func prometheusMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(&rec, r)
 
+		// Inject artificial latency for demo purposes if configured
+		if artificialLatencyMs > 0 {
+			time.Sleep(time.Duration(artificialLatencyMs) * time.Millisecond)
+		}
+
 		duration := time.Since(start)
 		statusCode := strconv.Itoa(rec.statusCode)
 		route := getRoutePattern(r)
@@ -120,6 +127,15 @@ func init() {
 	staticAssetsPath = os.Getenv(StaticAssetsPathEnvVar)
 	if len(staticAssetsPath) == 0 {
 		staticAssetsPath = StaticAssetsPathDefault
+	}
+
+	// Read artificial latency configuration for demo purposes
+	latencyStr := os.Getenv(LatencyInjectionEnvVar)
+	if len(latencyStr) > 0 {
+		if latency, err := strconv.Atoi(latencyStr); err == nil && latency > 0 {
+			artificialLatencyMs = latency
+			log.Printf("Artificial latency enabled: %dms per request (for demo purposes)", artificialLatencyMs)
+		}
 	}
 }
 
