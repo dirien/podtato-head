@@ -7,7 +7,9 @@ ARG PART
 ENV PART=${PART}
 
 ENV GO111MODULE=on \
-    CGO_ENABLED=0
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
 WORKDIR /build
 

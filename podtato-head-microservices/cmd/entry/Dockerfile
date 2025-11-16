@@ -4,7 +4,9 @@ ARG GITHUB_USER=podtato-head
 LABEL org.opencontainers.image.source "https://github.com/${GITHUB_USER}/podtato-head"
 
 ENV GO111MODULE=on \
-    CGO_ENABLED=0
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
 WORKDIR /build
 

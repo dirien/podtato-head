@@ -41,7 +41,12 @@ function build_image () {
     echo "INFO: building image ${image_name}:${image_tag}"
     echo "INFO: with context dir ${context_dir}; Dockerfile ${relative_path_to_dockerfile}"
 
-    docker build ${context_dir} \
+    # Use PLATFORM environment variable if set, default to linux/amd64
+    local platform=${PLATFORM:-linux/amd64}
+    echo "INFO: building for platform ${platform}"
+
+    docker buildx build ${context_dir} \
+        --platform "${platform}" \
         --tag "${image_name}:${image_tag}" \
         --build-arg "GITHUB_USER=${registry_user}" \
         --build-arg "BASE_RUN_IMAGE=${base_run_image}" \

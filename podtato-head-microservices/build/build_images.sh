@@ -27,8 +27,8 @@ source ${root_dir}/scripts/build-image.sh
 
 ### set registry
 registry_user=${1:-${GITHUB_USER}}
-## must be lower case for container registries
-registry_user=${registry_user,,}
+## must be lower case for container registries (use tr for macOS compatibility)
+registry_user=$(echo "${registry_user}" | tr '[:upper:]' '[:lower:]')
 registry_token=${2:-${GITHUB_TOKEN}}
 registry_hostname=${3:-ghcr.io}
 base_run_image=${4:-scratch}
@@ -65,7 +65,8 @@ build_image \
     ${push_too}
 
 ### build parts images
-parts=($(find ${app_dir}/pkg/assets/images/* -type d -printf '%f\n'))
+# Use -exec basename for macOS compatibility instead of -printf
+parts=($(find ${app_dir}/pkg/assets/images/* -type d -exec basename {} \;))
 for part in "${parts[@]}"; do
     if [[ -z "${RELEASE_BUILD}" ]]; then
         image_name=${registry_hostname}/${registry_user}/podtato-head/${part}
